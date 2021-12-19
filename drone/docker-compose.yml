@@ -1,0 +1,40 @@
+version: '3.8'
+
+networks:
+  drone:
+    external: false
+  gitea:
+    external: true
+
+services:
+  drone:
+    image: drone/drone:2
+    ports:
+      - 7888:80
+    volumes:
+      - ./data:/data
+    environment:
+      - DRONE_SERVER_HOST=localhost:7888
+      - DRONE_SERVER_PROTO=http
+      - DRONE_GITEA_SERVER=http://gitea:3000
+      - DRONE_GITEA_CLIENT_ID=777f28c4-5230-442d-a5b9-21f8e464ff66
+      - DRONE_GITEA_CLIENT_SECRET=qNyr8mnxasDqDRW7Ci90Jl4ME8tNh4L6s4HCfM9mVFrt
+      - DRONE_RPC_SECRET=8bd1cd898012153926a5219260c6666c
+    networks:
+      - gitea
+      - drone
+
+  drone-runner:
+    image: drone/drone-runner-docker:1
+    depends_on:
+      - drone
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=http
+      - DRONE_RPC_HOST=drone
+      - DRONE_RPC_SECRET=8bd1cd898012153926a5219260c6666c
+    ports:
+      - 7889:3000
+    networks:
+      - drone
